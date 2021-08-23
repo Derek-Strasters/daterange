@@ -107,7 +107,7 @@ class DateRange:
             return self.start == other.start and self.end == other.end
 
         def __lt__(self, other: Union['DateRange.Interval', date]):
-            """If this DateRange is entirely after another DateRange"""
+            """If this DateRange is entirely before another DateRange"""
             return self.end < other.start if isinstance(other, type(self)) else self.end < other
 
         def __gt__(self, other: Union['DateRange.Interval', date]):
