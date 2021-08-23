@@ -121,24 +121,18 @@ class DateRange:
 
         def __sub__(self, other: 'DateRange.Interval') -> List['DateRange.Interval']:
             """Remove dates where another Interval intersects this one. Returns a list of Intervals"""
-            if self.not_intersects(other):  # (..)  [..] and [..]  (..)
-                return [self.copy(), ]
-            if other in self:
-                if self == other:  # ([::::::)]
-                    return []
-                if self.start == other.start:  # ([:::]...)
-                    return [type(self)(other.end + _DAY, self.end), ]
-                if self.end == other.end:  # (...[:::])
-                    return [type(self)(self.start, other.start - _DAY), ]
-                # (..[::]..)
-                return [type(self)(self.start, other.start - _DAY),
-                        type(self)(other.end + _DAY, self.end)]
-            if self in other:  # [..(::)..]
-                return []
-            if self.date_in(other.end):  # [..(::]..)
-                return [type(self)(other.end + _DAY, self.end), ]
-            if self.date_in(other.start):  # (..[::)..]
-                return [type(self)(self.start, other.start - _DAY), ]
+            if self.start < other.start:
+                if self.end >= other.start:
+                    if self.end > other.end:
+                        return [type(self)(self.start, other.start - _DAY),
+                                type(self)(other.end + _DAY, self.end)]  # (..[::]..)
+                    return [type(self)(self.start, other.start - _DAY), ]  # (...[:::])  (..[::)..]
+                return [self.copy(), ]  # (..) [..]
+            if self.start > other.end:
+                return [self.copy(), ]  # [..] (..)
+            if self.end > other.end:
+                return [type(self)(other.end + _DAY, self.end), ]  # [..(::]..)  ([:::]...)
+            return []  # [(::::::)]
 
         def __repr__(self):
             return f"Interval({self.start}, {self.end})"
