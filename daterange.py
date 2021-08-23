@@ -37,24 +37,25 @@ class DateRange:
     >>> august + september + july == DateRange(date(2021, 7, 1), date(2021, 9, 30))
     True
 
-    datetime.date object can also be checked if they fall within a DateRange:
+    datetime.date object can be checked if it falls within a DateRange:
     >>> date(2021, 8, 17) in august # Is Aug 17th in the range?
     True
-    >>> date(2021, 9, 10) in august # Is Oct 10th in the range?
+    >>> date(2021, 9, 10) in august # Is Sep 10th in the range?
     False
 
-    This works with DateRanges as well
+    This works with DateRanges as well:
     >>> august in  DateRange(date(2021, 7, 1), date(2021, 9, 30))
     True
 
     DateRanges can also be intersected with and subtracted from one another:
-    >>> aug_2_sep = august + september + july
-    >>> print(aug_2_sep - august)
+    >>> jul_2_sep = august + september + july
+    >>> print(jul_2_sep - august)
     from 2021-07-01 to 2021-07-31 and
     from 2021-09-01 to 2021-09-30
     >>> jul_2_aug = july + august
+    >>> aug_2_sep = august + september
     >>> print(jul_2_aug & aug_2_sep)
-    from 2021-07-01 to 2021-08-31
+    from 2021-08-01 to 2021-08-31
 
     Taking inspiration from the way we refer to dates with language, DateRanges
     are treated inclusively as this is the most idiomatic approach.
@@ -69,6 +70,8 @@ class DateRange:
     >>> DateRange(date(2021, 8, 1), date(2021, 8, 31)).days
     31
 
+    If the start day or end day is None, the range will be extended from the 
+    end or beggining of time to the start or end day.
     If the start day is before the end day, the range will include all time
     except for that between the start date and end date
     If the start day is exactly one day after the end day the range will be all
@@ -208,18 +211,22 @@ class DateRange:
 
     @property
     def days(self) -> int:
+        """Return the number of days in the DateRange (inclusive)"""
         return sum(interval.days for interval in self)
 
     @property
     def intervals(self) -> List[Interval]:
+        """List of date intervals within the DateRange"""
         return self._intervals
 
     @property
     def earliest(self) -> date:
+        """The earliest day in the DateRange"""
         return self.intervals[0].start if self.intervals else None
 
     @property
     def latest(self) -> date:
+        """The latests day in the DateRange"""
         return self.intervals[-1].end if self.intervals else None
 
     @classmethod
@@ -252,7 +259,7 @@ class DateRange:
         return self.latest < other.earliest if self.latest and other.earliest else None
 
     def __contains__(self, other: Union[date, 'DateRange']):
-        """If another DateRange (or date) is entirely within this DateRange (Inclusive of end date)"""
+        """If another DateRange (or date) is entirely within this DateRange (inclusive of end date)"""
         if not isinstance(other, DateRange):
             if isinstance(other, date):
                 return any(other in _range for _range in self)
@@ -306,7 +313,7 @@ class DateRange:
         return self
 
     def __and__(self, other: Union[date, 'DateRange']) -> 'DateRange':
-        """Return the intersection of date ranges or None if they do not intersect"""
+        """Return the intersection of date ranges or an empty DateRange if they do not intersect"""
         return self.copy()._interval_intersect(other)
 
     __rand__ = __and__
