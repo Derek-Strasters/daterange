@@ -97,6 +97,9 @@ class DateRange:
                 return self.date_in(other)
             return self.start <= other.start and self.end >= other.end
 
+        def date_in(self, _date: date):
+            return self.end >= _date >= self.start
+
         def __eq__(self, other):
             return self.start == other.start and self.end == other.end
 
@@ -110,14 +113,9 @@ class DateRange:
 
         def __and__(self, other: 'DateRange.Interval') -> Union[None, 'DateRange.Interval']:
             """Intersection"""
-            if self.not_intersects(other):
-                return None
-            if other in self:
-                return other.copy()
-            if other.start in self:
-                return type(self)(other.start, self.end)
-            if other.end in self:
-                return type(self)(self.start, other.end)
+            start = self.start if self.start >= other.start else other.start
+            end = self.end if self.end <= other.end else other.end
+            return type(self)(start, end) if start <= end else None
 
         def __sub__(self, other: 'DateRange.Interval') -> List['DateRange.Interval']:
             """Remove dates where another Interval intersects this one. Returns a list of Intervals"""
@@ -132,15 +130,12 @@ class DateRange:
                 return [self.copy(), ]  # [..] (..)
             if self.end > other.end:
                 return [type(self)(other.end + _DAY, self.end), ]  # [..(::]..)  ([:::]...)
-            return []  # [(::::::)]
+            return []  # [(::::::)]  [..(::)..]  [(:::)...]  [...(:::)]
 
         def __repr__(self):
             return f"Interval({self.start}, {self.end})"
 
         __str__ = __repr__
-
-        def date_in(self, _date: date):
-            return self.end >= _date >= self.start
 
         def intersects(self, other: 'DateRange.Interval') -> bool:
             return self.end >= other.start and self.start <= other.end
@@ -194,6 +189,7 @@ class DateRange:
     @classmethod
     def from_list(cls, ranges: List[Union['DateRange', 'DateRange.Interval', date]]) -> 'DateRange':
         new = cls()
+        # TODO: use sorted for better performance
         for item in ranges:
             if isinstance(item, cls.Interval):
                 new_new = cls()
@@ -289,8 +285,7 @@ class DateRange:
         if not isinstance(other, DateRange):
             if isinstance(other, date):
                 if other in self:
-                    self._intervals = [self.Interval(other, other)]
-                    return self
+                    return type(self)(other, other)
                 self._intervals = []
                 return self
             return NotImplemented

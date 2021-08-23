@@ -138,6 +138,54 @@ class TestDateRange(TestCase):
         # [...](...) touching
         self.assertEqual([self.i_jul], self.i_jul - self.i_jun)
 
+        # (...[)...] overlap by 1
+        self.assertEqual([self.i_jul],
+                         (DateRange.Interval(date(2021, 7, 1), date(2021, 8, 1))) - self.i_aug)
+        # [...(]...) overlap by 1
+        self.assertEqual([self.i_jul],
+                         DateRange.Interval(date(2021, 6, 30), date(2021, 7, 31)) - self.i_jun)
+
+    def test_interval_intersect(self):
+        # (..)  [..]
+        self.assertEqual(None, self.i_may_jun & self.i_jul_aug)
+        # [..]  (..)
+        self.assertEqual(None, self.i_aug_sep & self.i_may_jun)
+
+        # (..[::)..]
+        self.assertEqual(self.i_jun, self.i_may_jun & self.i_jun_jul)
+        # [..(::]..)
+        self.assertEqual(self.i_jul, self.i_jul_aug & self.i_jun_jul)
+
+        # ([::::::)]  the same
+        self.assertEqual(self.i_may_jun, self.i_may_jun & self.i_may_jun)
+
+        # [(:::)...]  the same start
+        self.assertEqual(self.i_may, self.i_may & self.i_may_jun)
+        # ([:::]...)  the same start
+        self.assertEqual(self.i_may, self.i_may_jun & self.i_may)
+        # (...[:::])  the same end
+        self.assertEqual(self.i_jun, self.i_may_jun & self.i_jun)
+        # [...(:::)]  the same end
+        self.assertEqual(self.i_jun, self.i_jun & self.i_may_jun)
+
+        # (..[::]..)
+        self.assertEqual(self.i_jun, self.i_may_jun_jul & self.i_jun)
+        # [..(::)..]
+        self.assertEqual(self.i_jun, self.i_jun & self.i_may_jun_jul)
+
+        # (...)[...] touching
+        self.assertEqual(None, self.i_jul & self.i_aug)
+        # [...](...) touching
+        self.assertEqual(None, self.i_jul & self.i_jun)
+
+        # (...[)...] overlap by 1
+        self.assertEqual(DateRange.Interval(date(2021, 8, 1), date(2021, 8, 1)),
+                         (DateRange.Interval(date(2021, 7, 1), date(2021, 8, 1))) & self.i_aug)
+        # [...(]...) overlap by 1
+        self.assertEqual(DateRange.Interval(date(2021, 6, 30), date(2021, 6, 30)),
+                         DateRange.Interval(date(2021, 6, 30), date(2021, 7, 31)) & self.i_jun)
+
+
     def test_subtract(self):
         with self.subTest("a range with same start or end"):
             self.assertEqual(self.no_time, self.aug - self.aug)
