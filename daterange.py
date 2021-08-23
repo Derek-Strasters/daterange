@@ -27,7 +27,7 @@ class DateRange:
     numerical operators.
     Adding:
     >>> my_range = DateRange(date(2021, 8, 1), date(2021, 8, 31))  # All of Aug
-    >>> my_range += DateRange(date(2021, 10, 1), date(2021, 10, 31)) # All of Aug and Sep
+    >>> my_range += DateRange(date(2021, 10, 1), date(2021, 10, 31)) # All of Aug and Oct
     >>> print(my_range)
     from 2021-08-01 to 2021-08-31 and
     from 2021-10-01 to 2021-10-31
